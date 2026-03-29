@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customer Dashboard — Smart Garage</title>
+    <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+
+<nav class="navbar">
+    <div class="logo"><a href="index.html" style="color:inherit;">🔧 Smart<span>Garage</span></a></div>
+    <div class="nav-links">
+        <a href="index.html">Home</a>
+        <a href="customer-dashboard.html">My Dashboard</a>
+        <a href="garage-dashboard.html">Garage View</a>
+    </div>
+    <div class="nav-right">
+        <span class="user-name">👤 Customer</span>
+        <button class="btn btn-gray" onclick="doLogout()">Logout</button>
+    </div>
+</nav>
+
+<div class="dash-layout">
+
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="sidebar-title">My Account</div>
+        <div class="sidebar-item active" id="sb-book"        onclick="showSection('book', this)">📅 Book a Service</div>
+        <div class="sidebar-item"        id="sb-mybookings" onclick="showSection('mybookings', this); loadCustomerBookings();">📋 My Bookings</div>
+        <div class="sidebar-item"        id="sb-track"      onclick="showSection('track', this)">🔍 Track Repair</div>
+        <div class="sidebar-item"        id="sb-diag"       onclick="showSection('diagnostics', this)">⚡ Diagnostics</div>
+        <div class="sidebar-item"        id="sb-vms"        onclick="showSection('vms', this); loadMonitor();">🛡️ Health Monitor</div>
+    </div>
+
+    <!-- Main -->
+    <div class="dash-main">
+
+        <!-- ===== BOOK SERVICE ===== -->
+        <div id="book" class="dash-section">
+            <h2 class="page-title">Book a <span>Service</span></h2>
+            <p class="page-sub">Fill in your details to schedule a service appointment.</p>
+
+            <!-- Step 1: Booking Form -->
+            <div id="booking-step1">
+                <div class="form-box" style="max-width:100%;">
+                    <h2>Service Details</h2>
+                    <p class="form-note">All fields marked * are required.</p>
+
+                    <div id="bk-alert"></div>
+
+                    <div class="form-row">
+                        <div class="form-group"><label>Full Name *</label><input type="text" id="bk-name" placeholder="Your full name"></div>
+                        <div class="form-group"><label>Phone Number *</label><input type="tel" id="bk-phone" placeholder="+971 50 000 0000"></div>
+                    </div>
+
+                    <div class="form-group"><label>Email Address *</label><input type="email" id="bk-email" placeholder="your@email.com"></div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Car Make *</label>
+                            <select id="bk-make">
+                                <option value="">Select Make</option>
+                                <option>Toyota</option><option>Nissan</option><option>Honda</option>
+                                <option>BMW</option><option>Mercedes-Benz</option><option>Audi</option>
+                                <option>Ford</option><option>Hyundai</option><option>Kia</option><option>Mitsubishi</option>
+                            </select>
+                        </div>
+                        <div class="form-group"><label>Car Model *</label><input type="text" id="bk-model" placeholder="e.g. Camry, X5"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Service Type *</label>
+                        <select id="bk-service">
+                            <option value="">Select a Service</option>
+                            <option value="General Service">General Service — AED 199</option>
+                            <option value="Oil Change">Oil Change — AED 89</option>
+                            <option value="Tyre Service">Tyre Service — AED 129</option>
+                            <option value="Brake Service">Brake Service — AED 179</option>
+                            <option value="AC Service">AC Service — AED 249</option>
+                            <option value="Electrical Diagnostics">Electrical Diagnostics — AED 149</option>
+                            <option value="Transmission">Transmission — AED 349</option>
+                            <option value="Full Inspection">Full Inspection — AED 299</option>
+                        </select>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group"><label>Preferred Date *</label><input type="date" id="bk-date"></div>
+                        <div class="form-group">
+                            <label>Preferred Time *</label>
+                            <select id="bk-time">
+                                <option value="">Select Time</option>
+                                <option>8:00 AM</option><option>9:00 AM</option><option>11:00 AM</option>
+                                <option>1:00 PM</option><option>2:00 PM</option><option>4:00 PM</option><option>5:00 PM</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group"><label>Describe the Issue (Optional)</label><textarea id="bk-notes" placeholder="Any specific problems you want us to check..."></textarea></div>
+
+                    <button class="btn btn-red btn-full" onclick="handleBooking(event)">Next: Choose Payment →</button>
+                </div>
+            </div>
+
+            <!-- Step 2: Payment -->
+            <div id="booking-step2" style="display:none;">
+                <div class="form-box" style="max-width:100%;">
+                    <h2>Secure <span style="color:#e63946;">Payment</span></h2>
+                    <p class="form-note">Review your booking and complete payment. All transactions are SSL encrypted.</p>
+
+                    <!-- Booking Summary -->
+                    <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:18px;margin-bottom:20px;">
+                        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#64748b;margin-bottom:12px;">Booking Summary</div>
+                        <div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid #e2e8f0;font-size:13px;"><span style="color:#64748b;">Customer</span><span id="sum-name" style="font-weight:600;">—</span></div>
+                        <div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid #e2e8f0;font-size:13px;"><span style="color:#64748b;">Vehicle</span><span id="sum-car" style="font-weight:600;">—</span></div>
+                        <div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid #e2e8f0;font-size:13px;"><span style="color:#64748b;">Service</span><span id="sum-service" style="font-weight:600;">—</span></div>
+                        <div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid #e2e8f0;font-size:13px;"><span style="color:#64748b;">Date & Time</span><span id="sum-date" style="font-weight:600;">—</span></div>
+                        <div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid #e2e8f0;font-size:13px;"><span style="color:#64748b;">Subtotal</span><span id="sum-subtotal" style="font-weight:600;">AED 0</span></div>
+                        <div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid #e2e8f0;font-size:13px;"><span style="color:#64748b;">VAT (5%)</span><span id="sum-vat" style="font-weight:600;">AED 0</span></div>
+                        <div style="display:flex;justify-content:space-between;padding:9px 0 0;font-size:15px;font-weight:800;"><span>Total</span><span id="sum-total" style="color:#e63946;">AED 0</span></div>
+                    </div>
+
+                    <!-- Payment Methods -->
+                    <div class="form-group">
+                        <label>Payment Method</label>
+                        <div class="payment-methods">
+                            <div class="pay-method selected" id="pay-card" onclick="selectPayMethod('card')">
+                                <div class="pay-icon">💳</div>
+                                <div class="pay-name">Credit / Debit Card</div>
+                            </div>
+                            <div class="pay-method" id="pay-digital" onclick="selectPayMethod('digital')">
+                                <div class="pay-icon">📱</div>
+                                <div class="pay-name">Apple / Google Pay</div>
+                            </div>
+                            <div class="pay-method" id="pay-cash" onclick="selectPayMethod('cash')">
+                                <div class="pay-icon">💵</div>
+                                <div class="pay-name">Pay at Garage</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Card Fields -->
+                    <div id="card-fields" class="card-fields">
+                        <div id="pay-alert"></div>
+                        <div class="form-group"><label>Name on Card *</label><input type="text" id="card-name" placeholder="As it appears on card"></div>
+                        <div class="form-group"><label>Card Number *</label><input type="text" id="card-number" placeholder="1234  5678  9012  3456" maxlength="22" oninput="formatCardNumber(this)"></div>
+                        <div class="card-row3">
+                            <div class="form-group"><label>Expiry *</label><input type="text" id="card-expiry" placeholder="MM / YY" maxlength="7" oninput="formatExpiry(this)"></div>
+                            <div class="form-group"><label>CVV *</label><input type="password" id="card-cvv" placeholder="•••" maxlength="4"></div>
+                            <div class="form-group"><label>ZIP</label><input type="text" placeholder="00000" maxlength="10"></div>
+                        </div>
+                        <div class="ssl-note">🔒 256-bit SSL encryption — your card data is never stored</div>
+                    </div>
+
+                    <!-- Digital Pay Info -->
+                    <div id="digital-info" style="display:none;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:20px;text-align:center;margin-bottom:16px;">
+                        <div style="font-size:36px;margin-bottom:10px;">📱</div>
+                        <div style="font-size:13px;font-weight:600;color:#475569;">Click "Confirm & Pay" to proceed to Apple Pay / Google Pay checkout.</div>
+                    </div>
+
+                    <!-- Cash Info -->
+                    <div id="cash-info" style="display:none;background:rgba(217,119,6,0.08);border:1px solid rgba(217,119,6,0.3);border-radius:10px;padding:16px;margin-bottom:16px;">
+                        <div style="color:#d97706;font-weight:700;margin-bottom:5px;">⚠️ Pay at Garage</div>
+                        <div style="font-size:12px;color:#64748b;line-height:1.6;">Please arrive 10 minutes before your appointment with your booking reference. Payment is due before service begins.</div>
+                    </div>
+
+                    <div style="display:flex;gap:10px;margin-top:10px;">
+                        <button class="btn btn-gray" onclick="goBackToBooking()">← Back</button>
+                        <button id="pay-btn" class="btn btn-red" style="flex:1;justify-content:center;" onclick="confirmPayment(event)">✅ Confirm & Pay</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Success -->
+            <div id="booking-success-section" style="display:none;">
+                <div class="success-box">
+                    <span class="success-icon">🎉</span>
+                    <h2>Booking Confirmed!</h2>
+                    <p>Your appointment is booked. A confirmation will be sent to your email.</p>
+                    <div class="ref-badge" id="booking-ref">SGK-XXXXXX</div>
+                    <p style="font-size:12px;color:#94a3b8;">Save this reference number to track your repair status.</p>
+                    <br>
+                    <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
+                        <button class="btn btn-red" onclick="showSection('track', document.getElementById('sb-track'))">🔍 Track Repair</button>
+                        <button class="btn btn-outline" onclick="newBooking()">📅 Book Another</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== MY BOOKINGS ===== -->
+        <div id="mybookings" class="dash-section" style="display:none;">
+            <h2 class="page-title">My <span>Bookings</span></h2>
+            <p class="page-sub">All your past and upcoming service bookings.</p>
+
+            <div class="table-box">
+                <div class="table-header">Booking History</div>
+                <table>
+                    <thead><tr><th>Ref</th><th>Service</th><th>Vehicle</th><th>Date</th><th>Time</th><th>Status</th></tr></thead>
+                    <tbody id="my-bookings-table">
+                        <tr><td colspan="6" style="text-align:center;color:#999;padding:20px;">Loading...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ===== TRACK REPAIR ===== -->
+        <div id="track" class="dash-section" style="display:none;">
+            <h2 class="page-title">Track Your <span>Repair</span></h2>
+            <p class="page-sub">Enter your booking reference to see live status.</p>
+
+            <div class="form-box" style="max-width:100%;">
+                <div id="track-alert"></div>
+                <div class="form-row" style="align-items:flex-end;">
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label>Booking Reference</label>
+                        <input type="text" id="track-ref" placeholder="e.g. SGK-A1B2C3" style="text-transform:uppercase;">
+                    </div>
+                    <div style="padding-bottom:0;">
+                        <button id="track-btn" class="btn btn-red" style="height:42px;" onclick="trackRepair()">🔍 Track</button>
+                    </div>
+                </div>
+                <div id="track-result"></div>
+
+                <!-- Demo job -->
+                <div style="margin-top:28px;padding-top:24px;border-top:1px solid #e2e8f0;">
+                    <div style="font-size:10px;text-transform:uppercase;color:#94a3b8;letter-spacing:1px;margin-bottom:6px;font-weight:700;">Demo Job</div>
+                    <div style="font-family:Poppins,sans-serif;font-size:24px;font-weight:800;color:#e63946;">SGK-082547</div>
+                    <div style="font-size:13px;color:#64748b;margin-top:4px;margin-bottom:16px;">Toyota Camry · Brake Service · Bay 3 · Ahmed Al Rashid</div>
+
+                    <div class="progress-steps">
+                        <div class="step done"><div class="dot">✓</div><div class="step-name">Check-In</div></div>
+                        <div class="step done"><div class="dot">✓</div><div class="step-name">Diagnosis</div></div>
+                        <div class="step active"><div class="dot">3</div><div class="step-name">Repair</div></div>
+                        <div class="step"><div class="dot">4</div><div class="step-name">QC Check</div></div>
+                        <div class="step"><div class="dot">5</div><div class="step-name">Ready</div></div>
+                    </div>
+
+                    <div class="update-list">
+                        <div class="update-item"><h4>🔧 Brake pads replacement in progress</h4><p>Front brake pads being replaced with OEM parts. ETA 45 minutes.</p><div class="ts">2 min ago</div></div>
+                        <div class="update-item"><h4>✅ Diagnosis complete</h4><p>OBD-II scan done. 2 issues found: worn brake pads & low transmission fluid.</p><div class="ts">1 hour ago</div></div>
+                        <div class="update-item"><h4>🚗 Vehicle checked in</h4><p>Toyota Camry received and assigned to Bay 3. Service started.</p><div class="ts">2 hours ago</div></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== DIAGNOSTICS ===== -->
+        <div id="diagnostics" class="dash-section" style="display:none;">
+            <h2 class="page-title">Vehicle <span>Diagnostics</span></h2>
+            <p class="page-sub">OBD-II scan results for your vehicle.</p>
+
+            <div style="background:white;border-radius:12px;padding:28px;box-shadow:0 1px 6px rgba(0,0,0,0.07);border:1px solid #e2e8f0;text-align:center;margin-bottom:18px;">
+                <div style="font-size:48px;margin-bottom:12px;">🔍</div>
+                <div id="scan-status" style="font-family:Poppins,sans-serif;font-size:18px;font-weight:700;color:#0f172a;margin-bottom:6px;">SCAN COMPLETE</div>
+                <div style="font-size:12px;color:#94a3b8;margin-bottom:18px;">Toyota Camry 2022 · Last scan: Today 09:32 AM</div>
+                <button class="btn btn-red" onclick="runScan()">🔄 Run New Scan</button>
+            </div>
+
+            <h3 style="font-family:Poppins,sans-serif;font-size:16px;font-weight:700;color:#0f172a;margin-bottom:14px;">Diagnostic Results</h3>
+            <div class="diag-grid">
+                <div class="diag-item"><div class="sys">Engine</div><div class="val">Optimal</div><div class="st">✓ No fault codes</div></div>
+                <div class="diag-item warn"><div class="sys">Battery</div><div class="val">12.4V</div><div class="st">⚠️ Slightly low</div></div>
+                <div class="diag-item err"><div class="sys">Brake System</div><div class="val">Code P0571</div><div class="st">🚨 Switch fault</div></div>
+                <div class="diag-item"><div class="sys">Transmission</div><div class="val">Normal</div><div class="st">✓ No issues</div></div>
+                <div class="diag-item"><div class="sys">AC System</div><div class="val">Optimal</div><div class="st">✓ Refrigerant OK</div></div>
+                <div class="diag-item warn"><div class="sys">Tyre Pressure</div><div class="val">31 PSI</div><div class="st">⚠️ 3 PSI below</div></div>
+                <div class="diag-item"><div class="sys">Fuel System</div><div class="val">Normal</div><div class="st">✓ Injectors clear</div></div>
+                <div class="diag-item warn"><div class="sys">Oil Level</div><div class="val">Low</div><div class="st">⚠️ Top-up needed</div></div>
+                <div class="diag-item"><div class="sys">ABS</div><div class="val">Normal</div><div class="st">✓ Functional</div></div>
+                <div class="diag-item"><div class="sys">Airbags</div><div class="val">Ready</div><div class="st">✓ All sensors OK</div></div>
+                <div class="diag-item"><div class="sys">Coolant</div><div class="val">88°C</div><div class="st">✓ Normal</div></div>
+                <div class="diag-item"><div class="sys">Exhaust</div><div class="val">Normal</div><div class="st">✓ Emissions pass</div></div>
+            </div>
+
+            <div style="margin-top:18px;display:flex;gap:10px;flex-wrap:wrap;">
+                <button class="btn btn-red" onclick="showSection('book', document.getElementById('sb-book'))">📅 Book Repair</button>
+                <button class="btn btn-outline" onclick="showToast('Report sent to your email!', 'green')">📧 Email Report</button>
+            </div>
+        </div>
+
+        <!-- ===== VMS ===== -->
+        <div id="vms" class="dash-section" style="display:none;">
+            <h2 class="page-title">Virtual Mechanic <span>Shadow™</span></h2>
+            <p class="page-sub">30-day post-service vehicle health monitoring.</p>
+            <div id="monitor-section"><p style="color:#999;font-size:13px;">Loading health data...</p></div>
+        </div>
+
+    </div>
+</div>
+
+<script src="assets/js/main.js"></script>
+<script>
+    // Set min date to tomorrow
+    var d = document.getElementById('bk-date');
+    if (d) { var t = new Date(); t.setDate(t.getDate()+1); d.min = t.toISOString().split('T')[0]; }
+</script>
+</body>
+</html>
